@@ -10,6 +10,10 @@ import org.springframework.security.core.GrantedAuthority;
 @Entity
 @Table(name = "ABC_PROFILE")
 public class Profile implements GrantedAuthority{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5548881839638705203L;
 	@Id
 	private int id;
 	@Column

@@ -1,6 +1,7 @@
 package com.abc.userservice.userservice.controllers;
 
-import java.sql.SQLIntegrityConstraintViolationException;
+
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,44 +23,54 @@ public class UserController {
 	@Autowired
 	UserServices userService;
 	
-	@PostMapping
-	public Response register(@RequestBody User user) {
+	@PostMapping("/register")
+	public Response<String> register(@RequestBody User user) {
 		// checked
 		System.out.println(user);
-		Response r =new Response(false);
+		Response<String> r =new Response<String>(false);
 		try {
 			
 			r=userService.register(user);
 			
 		} catch (Throwable e) {
 			
-			return new Response(false,e.getMessage());
+			return new Response<String>(false,e.getMessage());
 		}
 		return r;
 	}
 	
 	@GetMapping
-	public Response getAll() {
+	public Response<List<User>> getAll() {
 		// checked
 		return userService.getAllUser();
 	}
 	
+	@PostMapping("/resetRequest/{name}")
+	public Response<String> resetEmail(@PathVariable String name) {
+		return userService.sendResetEmail(name);
+	}
+	
+	@PutMapping("/reset")
+	public Response<String> resetPwd(@RequestBody User user) {
+		return userService.resetPwd(user);
+	}
+	
 	@GetMapping("/id/{id}")
-	public Response getUserById(@PathVariable int id) {
+	public Response<User> getUserById(@PathVariable int id) {
 		return userService.getUserById(id);
 	}
 	
 	@GetMapping("/name/{name}")
-	public Response getUserByName(@PathVariable String name) {
+	public Response<User> getUserByName(@PathVariable String name) {
 
 		return userService.getUserByName(name);
 	}
 	@PutMapping
-	public Response edit(@RequestBody User user) {
+	public Response<String> edit(@RequestBody User user) {
 		return userService.updateUser(user);
 	}
 	@DeleteMapping("/{id}")
-	public Response delete(@PathVariable int id) {
+	public Response<String> delete(@PathVariable int id) {
 		return userService.delete(id);
 	}
 

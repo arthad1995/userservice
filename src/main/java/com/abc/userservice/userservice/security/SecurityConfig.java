@@ -1,5 +1,6 @@
 package com.abc.userservice.userservice.security;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.abc.userservice.userservice.security.handlers.AuthenticationFailureHandlerImpl;
+import com.abc.userservice.userservice.security.handlers.AuthenticationSuccessHandlerImpl;
+import com.google.common.hash.Hashing;
+
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -24,22 +29,47 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private UserDetailsService userDetailsService;
 
+	@Autowired
+	private AuthenticationSuccessHandlerImpl authenticationSuccessHandlerImpl;
+	
+	@Autowired
+	private AuthenticationFailureHandlerImpl authenticationFailureHandlerImpl;
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
 		http.csrf().disable()
 
 				.authorizeRequests() // ,"/products/*"
-				.antMatchers("/register").permitAll().antMatchers("/users/register").hasAnyRole() // hasRole
-																									// /hasAnyRole("XXXX"),
+				.antMatchers("/users/register").permitAll()
+			
+				//.antMatchers("/users").hasAnyAuthority("student") // hasRole
+																								// /hasAnyRole("XXXX"),
 																									// ROLE_xxxx
-				.and().formLogin().loginProcessingUrl("/").usernameParameter("username").passwordParameter("password")
+				.and().formLogin()
+				.loginProcessingUrl("/login")
+				.usernameParameter("username")
+				.passwordParameter("password")
+				.failureHandler(authenticationFailureHandlerImpl)
+				.successHandler(authenticationSuccessHandlerImpl)
 				.and().httpBasic();
 
 	}
 
 	@Bean // @Bean : put the return object into spring container.
 	public PasswordEncoder passwordEncoder() {
-		PasswordEncoder encoder = new BCryptPasswordEncoder(11);
+		PasswordEncoder encoder = new PasswordEncoder() {
+			
+			@Override
+			public boolean matches(CharSequence rawPassword, String encodedPassword) {
+
+				return encode(rawPassword.toString()).equals(encodedPassword);
+			}
+			
+			@Override
+			public String encode(CharSequence rawPassword) {
+				
+				return Hashing.sha256().hashString(rawPassword.toString(), StandardCharsets.UTF_8).toString();
+			}
+		};
 		return encoder;
 	}
 
